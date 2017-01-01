@@ -1,6 +1,6 @@
 ARCH            = $(shell uname -m | sed s,i[3456789]86,ia32,)
 
-OBJS            = src/main.o
+OBJS            = src/bootloader/main.o
 TARGET          = kernel.efi
 
 
@@ -22,13 +22,12 @@ all: $(TARGET)
 boot: kernel.efi
 	mkdir -p ./hda/EFI/BOOT
 	cp kernel.efi ./hda/EFI/BOOT/BOOTx64.efi
-	qemu-system-x86_64 -bios $(OVMF) -L . -hda fat:./hda
+	qemu-system-x86_64 -bios $(OVMF) -L . -drive file=fat:./hda,index=0,media=disk,format=raw
 
 %.efi: %.so
 	objcopy -j .text -j .sdata -j .data -j .dynamic \
 		-j .dynsym  -j .rel -j .rela -j .reloc \
 		--target=efi-app-$(ARCH) $^ $@
-
 
 kernel.so: $(OBJS)
 	ld $(LDFLAGS) $(OBJS) -o $@ -lefi -lgnuefi
